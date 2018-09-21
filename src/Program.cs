@@ -8,6 +8,7 @@ namespace TournamentTool
         {
             WebServer server = new WebServer();
             server.RunServerAsync();
+            Console.WriteLine("server started!");
             Console.Read();
         }
     }

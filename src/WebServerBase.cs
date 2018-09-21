@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using GetFunc = System.Func<System.Threading.Tasks.Task<string>>;
-using PostFunc = System.Func<System.Collections.Generic.Dictionary<string, string>, System.Threading.Tasks.Task<string>>;
+using PostFunc = System.Func<System.Threading.Tasks.Task<string>>;
 
 namespace TournamentTool
 {
@@ -40,6 +40,7 @@ namespace TournamentTool
 
     abstract class WebServerBase
     {
+        public const string FORM_ID = "gorughw94seugbvur";
         private const int MAX_LISTENERS_COUNT = 10;
 
         protected abstract string BaseUrl { get; }
@@ -49,6 +50,19 @@ namespace TournamentTool
         protected WebServerBase()
         {
             AddHandlers();
+        }
+
+        public string SurroundWithBoilerplate(string content)
+        {
+            return $@"<HTML>
+    <head>
+        <link rel=""stylesheet"" href=""css/style.css"" /> 
+    </head>
+    <body>
+        <form id=""{FORM_ID}"" method=""post""></form>
+        {content}
+    </body>
+</HTML>";
         }
 
         private void AddHandlers()
@@ -62,7 +76,7 @@ namespace TournamentTool
                             GetHandlers.Add(attribute.Route, () => (Task<string>)method.Invoke(this, new object[] { }));
                             break;
                         case RouteHandlerAttribute.HttpMethodType.POST:
-                            PostHandlers.Add(attribute.Route, s => (Task<string>)method.Invoke(this, new object[] { s }));
+                            PostHandlers.Add(attribute.Route, () => (Task<string>)method.Invoke(this, new object[] { }));
                             break;
                         default: throw new NotImplementedException();
                     }
@@ -93,12 +107,18 @@ namespace TournamentTool
             switch (context.Request.HttpMethod)
             {
                 case "GET":
-                    if (GetHandlers.TryGetValue(context.Request.RawUrl, out GetFunc getHandler))
+                    if (context.Request.RawUrl.EndsWith(".css"))
+                    {
+                        await ResolveCss(context.Request.RawUrl).CopyToAsync(context.Response.OutputStream);
+                        context.Response.ContentType = "text/css";
+                    }
+                    else if (GetHandlers.TryGetValue(context.Request.RawUrl, out GetFunc getHandler))
                     {
                         using (var stream = context.Response.OutputStream)
                         using (var writer = new StreamWriter(stream))
-                            await writer.WriteAsync(await getHandler.Invoke());
-                        context.Response.ContentType = "text/html";
+                            await writer.WriteAsync(SurroundWithBoilerplate(await getHandler.Invoke()));
+                        context.Response.Headers.Add(HttpResponseHeader.ContentType, "text/html");
+                        //context.Response.ContentType = "text/html";
                     }
                     else
                     {
@@ -110,11 +130,10 @@ namespace TournamentTool
                 case "POST":
                     if (PostHandlers.TryGetValue(context.Request.RawUrl, out PostFunc postHandler))
                     {
-                        string redirectUrl;
                         using (var stream = context.Request.InputStream)
                         using (var reader = new StreamReader(stream))
-                            redirectUrl = await postHandler?.Invoke(SplitFormData(await reader.ReadToEndAsync()));
-                        context.Response.Redirect(redirectUrl);
+                            InputObject.Update(SplitFormData(await reader.ReadToEndAsync()));
+                        context.Response.Redirect(await postHandler?.Invoke());
                     }
                     else
                     {
@@ -132,8 +151,15 @@ namespace TournamentTool
             }
         }
 
+        private Stream ResolveCss(string file)
+        {
+            return File.OpenRead(Path.GetFullPath(file.Substring(1)));
+        }
+
         protected Dictionary<string, string> SplitFormData(string data)
         {
+            if (String.IsNullOrWhiteSpace(data))
+                return null;
             return data.Split('&').Select(s => s.Split('=')).ToDictionary(a => a[0], a => a[1]);
         }
     }

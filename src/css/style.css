@@ -1,0 +1,37 @@
+﻿.pairing {
+    display: inline-block;
+}
+
+    .pairing > div > div {
+        display: inline-block;
+        width: 100px;
+    }
+
+    .pairing > div > input {
+        width: 40px;
+    }
+
+.inline{
+    display: inline-block;
+}
+
+.table{
+    display: table;
+}
+
+.table-row{
+    display: table-row;
+}
+
+.table-cell{
+    display: table-cell;
+}
+
+.cell-name, .cell-name-left{
+    width: 100px;
+    vertical-align: top;
+}
+
+.cell-name-left{
+    text-align: right;
+}
