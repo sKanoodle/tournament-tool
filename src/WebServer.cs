@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TournamentTool.Tournaments;
 
 namespace TournamentTool
 {
@@ -114,134 +115,6 @@ namespace TournamentTool
         }
     }
 
-    interface ITournament
-    {
-        string Render();
-    }
-
-    class RoundRobinTournament : ITournament
-    {
-        Match[,] Rounds;
-        IEnumerable<Match> Matches => Rounds.Cast<Match>();
-
-        public RoundRobinTournament(string[] starters, int bestOf)
-        {
-            Person[] persons = starters.Select(s => new Person(s, this)).ToArray();
-
-            bool wasCountEven = (persons.Length & 1) == 0;
-            int count = wasCountEven ? persons.Length - 1 : persons.Length;
-            Rounds = new Match[count, persons.Length / 2];
-
-            int n2 = (count - 1) / 2;
-
-            // Initialize the list of teams.
-            int[] teams = Enumerable.Range(0, count).ToArray();
-
-            // Start the rounds.
-            for (int round = 0; round < count; round++)
-            {
-                for (int i = 0; i < n2; i++)
-                {
-                    int team1 = teams[n2 - i];
-                    int team2 = teams[n2 + i + 1];
-                    Rounds[round, i] = new Match(persons[team1], persons[team2], bestOf);
-                }
-
-                if (wasCountEven)
-                    Rounds[round, n2] = new Match(persons[teams[0]], persons.Last(), bestOf);
-
-                // Rotate the array.
-                RotateArray(teams);
-
-                void RotateArray(int[] array)
-                {
-                    int tmp = array[array.Length - 1];
-                    Array.Copy(array, 0, array, 1, array.Length - 1);
-                    array[0] = tmp;
-                }
-            }
-        }
-
-        public string Render()
-        {
-            return RenderMatches();
-        }
-
-        private string RenderMatches()
-        {
-            StringBuilder sb = new StringBuilder("<div class=\"table\">");
-            for (int round = 0; round < Rounds.GetLength(0); round++)
-            {
-                sb.Append("<div class=\"table-row\">");
-                for (int i = 0; i < Rounds.GetLength(1); i++)
-                    sb.Append(Rounds[round, i].RenderNeutral());
-                sb.Append("</div>");
-            }
-            sb.Append("</div>");
-            return sb.ToString();
-        }
-
-        class Person
-        {
-            public string Name;
-            public int Points => _Matches.Sum(m => m.GetPointSum(this));
-            public int PointsAgainst;
-            public int Sets => _Matches.Sum(m => m.GetSetSum(this));
-            public int SetsAgainst;
-            public int Matches => _Matches.Count(m => true);
-            public int MatchesAgainst;
-            public int RankingPoints;
-            public int Position;
-
-            private RoundRobinTournament Tournament;
-            private IEnumerable<Match> _Matches => Tournament.Matches.Where(m => m.Contains(this));
-
-            public Person(string name, RoundRobinTournament tournament)
-            {
-                Name = name;
-                Tournament = tournament;
-            }
-        }
-
-        class Match
-        {
-            public Person Contestant1;
-            public Person Contestant2;
-            public Set[] Sets;
-
-            public Match(Person person1, Person person2, int setCount)
-            {
-                Contestant1 = person1;
-                Contestant2 = person2;
-                Sets = Enumerable.Range(0, setCount).Select(_ => new Set()).ToArray();
-            }
-
-            public bool Contains(Person person) => person == Contestant1 || person == Contestant2;
-            public int GetPointSum(Person person) => person == Contestant1 ? Sets.Sum(s => s.Points1) : person == Contestant2 ? Sets.Sum(s => s.Points2) : 0;
-            public int GetSetSum(Person person) => Sets.Count(s => s.Winner == person);
-
-            public string RenderResult(Person first) => throw new NotImplementedException();
-
-            public string RenderNeutral()
-            {
-                return $@"
-<div class=""table-cell"">
-    <div class=""inline cell-name-left"">{Contestant1.Name}</div>
-    <div class=""inline"">{String.Join("", Sets.Select(s => $"<div>{s.Points1} : {s.Points2}</div>"))}</div>
-    <div class=""inline cell-name"">{Contestant2.Name}</div>
-</div>";
-            }
-        }
-
-        class Set
-        {
-            public Match Match;
-            public int Points1;
-            public int Points2;
-            public Person Winner => Points1 == Points2 ? null : Points1 > Points2 ? Match.Contestant1 : Match.Contestant2;
-        }
-    }
-
     class SignupPerson : InputObject
     {
         public string Name => RawValue;
@@ -346,6 +219,8 @@ $@"<div class=""pairing"">
 
         public string ID { get; } = Guid.NewGuid().ToString();
         public virtual string RawValue { get; set; }
+
+        public string DefaultAttributes => $@" form=""{WebServerBase.FORM_ID}"" value=""{RawValue}"" name=""{ID}""";
     }
 
     //class IntInput : BaseInput

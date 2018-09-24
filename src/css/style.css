@@ -7,9 +7,9 @@
         width: 100px;
     }
 
-    .pairing > div > input {
-        width: 40px;
-    }
+.points {
+    width: 40px;
+}
 
 .inline{
     display: inline-block;
