@@ -51,7 +51,7 @@ namespace TournamentTool.Tournaments
 
         public string Render()
         {
-            return RenderMatches() + RenderResultsTable();
+            return RenderCrossTable() + RenderMatches() + RenderResultsTable();
         }
 
         private string RenderMatches()
@@ -84,6 +84,25 @@ namespace TournamentTool.Tournaments
                 sb.Append($"<div class=\"table-cell\">{person.Points} : {person.PointsAgainst}</div>");
                 sb.Append($"<div class=\"table-cell\">{person.RankingPoints}</div>");
 
+                sb.Append("</div>");
+            }
+            sb.Append("</div>");
+            return sb.ToString();
+        }
+
+        private string RenderCrossTable()
+        {
+            StringBuilder sb = new StringBuilder("<div class=\"table\">");
+            foreach (var person1 in Persons)
+            {
+                sb.Append("<div class=\"table-row\">");
+                foreach (var person2 in Persons)
+                {
+                    if (person1 == person2)
+                        sb.Append("<div class =\"table-cell\">-</div>");
+                    else
+                        sb.Append(Matches.SingleOrDefault(m => m.Contains(person1) && m.Contains(person2))?.RenderResult(person1) ?? "<div class =\"table-cell\">-</div>");
+                }
                 sb.Append("</div>");
             }
             sb.Append("</div>");

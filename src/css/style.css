@@ -1,13 +1,4 @@
-﻿.pairing {
-    display: inline-block;
-}
-
-    .pairing > div > div {
-        display: inline-block;
-        width: 100px;
-    }
-
-.points {
+﻿.points {
     width: 40px;
 }
 
@@ -25,13 +16,18 @@
 
 .table-cell{
     display: table-cell;
+    text-align: center;
 }
 
-.cell-name, .cell-name-left{
+.cell-name-right, .cell-name-left{
     width: 100px;
     vertical-align: top;
 }
 
 .cell-name-left{
     text-align: right;
+}
+
+.cell-name-right {
+    text-align: left;
 }

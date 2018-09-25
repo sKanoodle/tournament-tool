@@ -63,15 +63,28 @@ namespace TournamentTool
         public int GetSetTieSum(IPerson person) => Sets.Count(s => s.Result.IsTied);
         public int GetSetLossSum(IPerson person) => Sets.Count(s => s.Result.Loser == person);
 
-        public string RenderResult(IPerson first) => throw new NotImplementedException();
+        public string RenderResult(IPerson first)
+        {
+            if (first == Contestant1)
+                return Render(Contestant1, Contestant2, s => s.Points1, s => s.Points2, false);
+            else if (first == Contestant2)
+                return Render(Contestant2, Contestant1, s => s.Points2, s => s.Points1, false);
+            else
+                throw new ArgumentException();
+        }
 
-        public virtual string RenderNeutral()
+        public virtual string RenderNeutral() => Render(Contestant1, Contestant2, s => s.Points1, s => s.Points2, true);
+
+        private string Render(IPerson person1, IPerson person2, Func<Set, Point> getPoints1, Func<Set, Point> getPoints2, bool makeEditable)
         {
             return $@"
 <div class=""table-cell"">
-    <div class=""inline cell-name-left"">{Contestant1.Name}</div>
-    <div class=""inline"">{String.Join("", Sets.Select(s => $"<div>{s.Points1.Render()} : {s.Points2.Render()}</div>"))}</div>
-    <div class=""inline cell-name"">{Contestant2.Name}</div>
+    <div class=""inline cell-name-left"">{person1.Name}</div>
+    <div class=""inline""> - </div>
+    <div class=""inline cell-name-right"">{person2.Name}</div>
+    <div>{String.Join("",
+        Sets.Select(s => $"<div>{(makeEditable ? getPoints1(s).Render() : getPoints1(s).Value.ToString())} : " +
+            $"{(makeEditable ? getPoints2(s).Render() : getPoints2(s).Value.ToString())}</div>"))}</div>
 </div>";
         }
     }
