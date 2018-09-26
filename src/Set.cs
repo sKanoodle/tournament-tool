@@ -31,7 +31,7 @@ namespace TournamentTool
 
         public string Render()
         {
-            return $@"<input class=""points"" {DefaultAttributes} type=""number"" step=""1"" min=""0"" />";
+            return $@"<input class=""points"" {DefaultAttributesAutoSubmit} type=""number"" step=""1"" min=""0"" />";
         }
     }
 }

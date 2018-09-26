@@ -29,17 +29,21 @@ namespace TournamentTool
             Signups.Add(new SignupPerson { RawValue = "Karl" });
             Signups.Add(new SignupPerson { RawValue = "Guenther" });
             Signups.Add(new SignupPerson { RawValue = "Lars" });
-
-            CreatePairings();
         }
 
         [RouteHandler(Routes.START)]
         public async Task<string> GetLandingPage()
         {
             return $@"{String.Join('\n', Signups.Select(s => s.RenderInput + "<br />"))}
-<button form=""{FORM_ID}"" type=""submit"" formaction=""{Routes.SIGNUP_COMMIT}"">Submit</button>
 <button form=""{FORM_ID}"" type=""submit"" formaction=""{Routes.START_ROUND_ROBIN}"">Round-Robin</button>
 <button form=""{FORM_ID}"" type=""submit"" formaction=""{Routes.SIGNUP_ADD}"">More people!</button>";
+        }
+
+        [RouteHandler(Routes.AUTO_REFRESH, RouteHandlerAttribute.HttpMethodType.POST)]
+        public async Task<string> AutoRefresh()
+        {
+            // if other sites than tournament use auto-refresh, there needs to be an active-site mechanic to determine the redirect target
+            return Routes.TOURNAMENT;
         }
 
         [RouteHandler(Routes.SIGNUP_ADD, RouteHandlerAttribute.HttpMethodType.POST)]
@@ -47,34 +51,6 @@ namespace TournamentTool
         {
             Signups.Add(new SignupPerson());
             return Routes.START;
-        }
-
-        [RouteHandler(Routes.SIGNUP_COMMIT, RouteHandlerAttribute.HttpMethodType.POST)]
-        public async Task<string> PostItemPage()
-        {
-            return Routes.ITEM;
-        }
-
-        [RouteHandler(Routes.ITEM)]
-        public async Task<string> GetItemPage()
-        {
-            return $@"{String.Join('\n', Signups.Select(s => s.RenderInput + "<br />"))}
-<button form=""{FORM_ID}"" type=""submit"" formaction=""{Routes.SIGNUP_COMMIT}"">Update</button>";
-        }
-
-        [RouteHandler(Routes.PAIRING_UPDATE, RouteHandlerAttribute.HttpMethodType.POST)]
-        public async Task<string> PairingUpdate()
-        {
-            return Routes.PAIRING;
-        }
-
-        [RouteHandler(Routes.PAIRING)]
-        public async Task<string> Pairing()
-        {
-             var s = String.Join("", Pairings.Select(list => $"<div class=\"col\">{String.Join("", list.Select(p => p.RenderPairing))}</div>"));
-
-
-            return s + $@"<div><button form=""{FORM_ID}"" type=""submit"" formaction=""{Routes.PAIRING_UPDATE}"">Update</button></div>";
         }
 
         [RouteHandler(Routes.START_ROUND_ROBIN, RouteHandlerAttribute.HttpMethodType.POST)]
@@ -90,26 +66,11 @@ namespace TournamentTool
             return Tournament.Render();
         }
 
-        private void CreatePairings()
-        {
-            List<MatchPairing> initialPairings = new List<MatchPairing>();
-            Pairings.Add(initialPairings);
-            for (int i = 0; i < Signups.Count; i += 2)
-            {
-                var part1 = new InitialPairingPart(Signups[i].Name);
-                var part2 = Signups.Count <= i + 1 ? (PairingPart)new EmptyPairingPart() : new InitialPairingPart(Signups[i + 1].Name);
-                initialPairings.Add(new MatchPairing(part1, part2));
-            }
-        }
-
         private static class Routes
         {
             public const string START = "/";
-            public const string SIGNUP_COMMIT = "/signup/commit";
+            public const string AUTO_REFRESH = "/auto-refresh";
             public const string SIGNUP_ADD = "/signup/add";
-            public const string PAIRING = "/pairing";
-            public const string PAIRING_UPDATE = "/pairing/update";
-            public const string ITEM = "/item";
             public const string START_ROUND_ROBIN = "/start/round-robin";
             public const string TOURNAMENT = "/tournament";
         }

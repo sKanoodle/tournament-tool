@@ -56,10 +56,27 @@ namespace TournamentTool
         {
             return $@"<HTML>
     <head>
-        <link rel=""stylesheet"" href=""css/style.css"" /> 
+        <link rel=""stylesheet"" href=""css/style.css"" />
+        <script>
+            window.onload = function() {{
+                var focus = localStorage.getItem('focus');
+                if (focus) {{
+                    document.getElementsByName(focus)[0].focus();
+                }}
+            }};
+            function changed(input) {{
+                input.form.submit();
+            }}
+            function gotFocus(input) {{
+                localStorage.setItem('focus', input.name);
+            }}
+            function lostFocus(input) {{
+                localStorage.removeItem('focus');
+            }}
+        </script>
     </head>
     <body>
-        <form id=""{FORM_ID}"" method=""post""></form>
+        <form id=""{FORM_ID}"" method=""post"" action=""/auto-refresh""></form>
         {content}
     </body>
 </HTML>";
@@ -117,8 +134,7 @@ namespace TournamentTool
                         using (var stream = context.Response.OutputStream)
                         using (var writer = new StreamWriter(stream))
                             await writer.WriteAsync(SurroundWithBoilerplate(await getHandler.Invoke()));
-                        context.Response.Headers.Add(HttpResponseHeader.ContentType, "text/html");
-                        //context.Response.ContentType = "text/html";
+                        context.Response.ContentType = "text/html";
                     }
                     else
                     {

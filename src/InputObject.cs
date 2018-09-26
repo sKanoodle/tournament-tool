@@ -24,6 +24,7 @@ namespace TournamentTool
         public string ID { get; } = Guid.NewGuid().ToString();
         public virtual string RawValue { get; set; }
 
-        public string DefaultAttributes => $@" form=""{WebServerBase.FORM_ID}"" value=""{RawValue}"" name=""{ID}""";
+        public string DefaultAttributes => $@"form=""{WebServerBase.FORM_ID}"" value=""{RawValue}"" name=""{ID}""";
+        public string DefaultAttributesAutoSubmit => $@"{DefaultAttributes}  onfocus=""gotFocus(this);"" onblur=""lostFocus(this);"" onchange=""changed(this);""";
     }
 }
