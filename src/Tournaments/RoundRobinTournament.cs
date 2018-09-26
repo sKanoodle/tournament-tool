@@ -39,8 +39,8 @@ namespace TournamentTool.Tournaments
 
                 // Rotate the array.
                 RotateArray(teams);
-
             }
+
             void RotateArray(int[] array)
             {
                 int tmp = array[array.Length - 1];
