@@ -7,14 +7,19 @@ namespace TournamentTool
 {
     class Match
     {
-        public IPerson Contestant1;
-        public IPerson Contestant2;
-        public Set[] Sets;
+        public virtual IPerson Contestant1 { get; private set; }
+        public virtual IPerson Contestant2 { get; private set; }
+        public Set[] Sets { get; private set; }
 
         public Match(IPerson person1, IPerson person2, int setCount)
+            : this(setCount)
         {
             Contestant1 = person1;
             Contestant2 = person2;
+        }
+
+        protected Match(int setCount)
+        {
             Sets = Enumerable.Range(0, setCount).Select(_ => new Set(this)).ToArray();
         }
 

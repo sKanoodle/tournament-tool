@@ -6,9 +6,9 @@ namespace TournamentTool
 {
     class Set
     {
-        public Match Match;
-        public Point Points1 = new Point();
-        public Point Points2 = new Point();
+        public Match Match { get; private set; }
+        public Point Points1 { get; } = new Point();
+        public Point Points2 { get; } = new Point();
         public ClashResult Result => ClashResult.FromPoints(Match.Contestant1, Match.Contestant2, Points1.Value, Points2.Value);
 
         public Set(Match match)

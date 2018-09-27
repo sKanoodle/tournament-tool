@@ -31,3 +31,7 @@
 .cell-name-right {
     text-align: left;
 }
+
+.hidden{
+    visibility: hidden;
+}
