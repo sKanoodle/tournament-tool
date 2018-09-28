@@ -7,17 +7,17 @@ namespace TournamentTool.Tournaments
 {
     class RoundRobinTournament : ITournament
     {
-        private RoundRobinPerson[] Persons;
+        private RoundRobinPerson[] people;
         private Match[,] Rounds;
         public IEnumerable<Match> Matches => Rounds.Cast<Match>();
 
         public RoundRobinTournament(string[] starters, int bestOf)
         {
-            Persons = starters.Select(s => new RoundRobinPerson(s, this)).ToArray();
+            people = starters.Select(s => new RoundRobinPerson(s, this)).ToArray();
 
-            bool wasCountEven = (Persons.Length & 1) == 0;
-            int count = wasCountEven ? Persons.Length - 1 : Persons.Length;
-            Rounds = new Match[count, Persons.Length / 2];
+            bool wasCountEven = (people.Length & 1) == 0;
+            int count = wasCountEven ? people.Length - 1 : people.Length;
+            Rounds = new Match[count, people.Length / 2];
 
             int n2 = (count - 1) / 2;
 
@@ -31,11 +31,11 @@ namespace TournamentTool.Tournaments
                 {
                     int team1 = teams[n2 - i];
                     int team2 = teams[n2 + i + 1];
-                    Rounds[round, i] = new Match(Persons[team1], Persons[team2], bestOf);
+                    Rounds[round, i] = new Match(people[team1], people[team2], bestOf);
                 }
 
                 if (wasCountEven)
-                    Rounds[round, n2] = new Match(Persons[teams[0]], Persons.Last(), bestOf);
+                    Rounds[round, n2] = new Match(people[teams[0]], people.Last(), bestOf);
 
                 // Rotate the array.
                 RotateArray(teams);
@@ -72,7 +72,7 @@ namespace TournamentTool.Tournaments
         {
             int place = 1;
             StringBuilder sb = new StringBuilder("<div class=\"table\">");
-            foreach (RoundRobinPerson person in Persons.OrderByDescending(p => p.RankingPoints).ThenByDescending(p => p.SetWins - p.SetLosses).ThenByDescending(p => p.Points - p.PointsAgainst)) // TODO: direct comparison when everything else is equal
+            foreach (RoundRobinPerson person in people.OrderByDescending(p => p.RankingPoints).ThenByDescending(p => p.SetWins - p.SetLosses).ThenByDescending(p => p.Points - p.PointsAgainst)) // TODO: direct comparison when everything else is equal
             {
                 sb.Append("<div class=\"table-row\">");
 
@@ -93,10 +93,10 @@ namespace TournamentTool.Tournaments
         private string RenderCrossTable()
         {
             StringBuilder sb = new StringBuilder("<div class=\"table\">");
-            foreach (var person1 in Persons)
+            foreach (var person1 in people)
             {
                 sb.Append("<div class=\"table-row\">");
-                foreach (var person2 in Persons)
+                foreach (var person2 in people)
                 {
                     if (person1 == person2)
                         sb.Append("<div class =\"table-cell\">-</div>");

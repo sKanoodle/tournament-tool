@@ -26,7 +26,10 @@ namespace TournamentTool
             PreviousMatch2 = previousMatch2;
 
             GetContestant1 = getContestant ?? (m => m.Result.Winner);
-            GetContestant1 = getContestant2 ?? GetContestant1;
+            GetContestant2 = getContestant2 ?? GetContestant1;
+
+            if (Contestant1 is EmptyPerson || Contestant2 is EmptyPerson)
+                Sets = new Set[0];
         }
     }
 }

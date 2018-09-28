@@ -13,4 +13,9 @@ namespace TournamentTool
             Name = name;
         }
     }
+
+    class EmptyPerson : IPerson
+    {
+        public string Name { get; } = String.Empty;
+    }
 }

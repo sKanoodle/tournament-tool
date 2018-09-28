@@ -9,7 +9,7 @@ namespace TournamentTool
     {
         public virtual IPerson Contestant1 { get; private set; }
         public virtual IPerson Contestant2 { get; private set; }
-        public Set[] Sets { get; private set; }
+        public Set[] Sets { get; protected set; }
 
         public Match(IPerson person1, IPerson person2, int setCount)
             : this(setCount)
@@ -42,7 +42,12 @@ namespace TournamentTool
         {
             get
             {
-                ClashResult result = new ClashResult();
+                if (Contestant1 is EmptyPerson)
+                    return ClashResult.FromPoints(Contestant2, Contestant1, 1, 0);
+
+                if (Contestant2 is EmptyPerson)
+                    return ClashResult.FromPoints(Contestant1, Contestant2, 1, 0);
+
                 int wins1 = 0;
                 int wins2 = 0;
 
@@ -90,6 +95,19 @@ namespace TournamentTool
     <div>{String.Join("",
         Sets.Select(s => $"<div>{(makeEditable ? getPoints1(s).Render() : getPoints1(s).Value.ToString())} : " +
             $"{(makeEditable ? getPoints2(s).Render() : getPoints2(s).Value.ToString())}</div>"))}</div>
+</div>";
+        }
+
+        public string RenderElimination()
+        {
+            return $@"<div>{RenderEliminationMatchPart(Contestant1, s => s.Points1)}{RenderEliminationMatchPart(Contestant2, s => s.Points2)}</div>";
+        }
+
+        private string RenderEliminationMatchPart(IPerson person, Func<Set, Point> getPoint)
+        {
+            return $@"<div class=""{(person is null ? "hidden" : String.Empty)}"">
+    <div class=""cell-name-left inline"">{person?.Name}</div>
+    {String.Join("", Sets.Select(s => getPoint(s).Render()))}
 </div>";
         }
     }

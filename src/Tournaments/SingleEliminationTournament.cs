@@ -7,14 +7,27 @@ namespace TournamentTool.Tournaments
 {
     class SingleEliminationTournament : ITournament
     {
-        protected readonly Person[] Persons;
+        protected readonly Person[] People;
         protected readonly Match[][] Matches;
 
-        public SingleEliminationTournament(string[] names)
+        public SingleEliminationTournament(string[] names, int setCount)
         {
-            Persons = names.Select(s => new Person(s)).ToArray();
-            Math.Log(1023, 2);
-            Matches = CreateBrackets();
+            People = names.Select(s => new Person(s)).ToArray();
+            int maxCount = (int)Math.Pow(2, Math.Ceiling(Math.Log(names.Length, 2)));
+            Match[] seeding = new Match[maxCount / 2];
+            for (int i = 0; i < seeding.Length; i++)
+            {
+                seeding[i] = new Match(tryGetValue(People, i * 2), tryGetValue(People, i * 2 + 1), setCount);
+            }
+
+            IPerson tryGetValue(IPerson[] people, int index)
+            {
+                if (index >= 0 && index < people.Length)
+                    return people[index];
+                return new EmptyPerson();
+            }
+
+            Matches = CreateBrackets(seeding);
         }
 
         /// <summary>
@@ -37,7 +50,7 @@ namespace TournamentTool.Tournaments
             if (seedings.Length != maxMatchCount)
                 throw new ArgumentException("count of seeding matches passed in is not 2^n.");
 
-            result = new Match[roundMatchCounts.Count + 1][];
+            result = new Match[roundMatchCounts.Count][];
             result[0] = seedings;
 
             for (int round = 1; round < result.Length; round++)
@@ -59,26 +72,13 @@ namespace TournamentTool.Tournaments
                 sb.Append($@"<div class=""inline"">");
                 foreach (Match match in round)
                 {
-                    RenderMatch(match);
+                    sb.Append(match.RenderElimination());
                 }
                 sb.Append("</div>");
             }
 
             sb.Append("</div>");
             return sb.ToString();
-        }
-
-        private string RenderMatch(Match match)
-        {
-            return $@"<div>{RenderMatchPart(match, m => m.Contestant1, s => s.Points1)}{RenderMatchPart(match, m => m.Contestant2, s => s.Points2)}</div>";
-        }
-
-        private string RenderMatchPart(Match match, Func<Match, IPerson> getPerson, Func<Set, Point> getPoint)
-        {
-            return $@"<div class=""{(getPerson(match) is null ? "hidden" : String.Empty)}"">
-    <div class=""cell-name-left inline"">{getPerson(match)?.Name}</div>
-    {String.Join("", match.Sets.Select(s => getPoint(s).Render()))}
-</div>";
         }
     }
 }
