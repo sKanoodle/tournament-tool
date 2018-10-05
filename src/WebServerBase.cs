@@ -42,38 +42,25 @@ namespace TournamentTool
     {
         public const string FORM_ID = "gorughw94seugbvur";
         private const int MAX_LISTENERS_COUNT = 10;
+        private readonly string[] StaticFileExtensions = { ".css", ".js" };
 
         protected abstract string BaseUrl { get; }
         private readonly Dictionary<string, GetFunc> GetHandlers = new Dictionary<string, GetFunc>();
         private readonly Dictionary<string, PostFunc> PostHandlers = new Dictionary<string, PostFunc>();
+        private readonly Dictionary<string, byte[]> StaticResources = new Dictionary<string, byte[]>();
 
         protected WebServerBase()
         {
             AddHandlers();
+            LoadStaticResources();
         }
 
         public string SurroundWithBoilerplate(string content)
         {
             return $@"<HTML>
     <head>
-        <link rel=""stylesheet"" href=""css/style.css"" />
-        <script>
-window.onload = function() {{
-    var focus = localStorage.getItem('focus');
-    if (focus) {{
-        document.getElementsByName(focus)[0].focus();
-    }}
-}};
-function changed(input) {{
-    input.form.submit();
-}}
-function gotFocus(input) {{
-    localStorage.setItem('focus', input.name);
-}}
-function lostFocus(input) {{
-    localStorage.removeItem('focus');
-}}
-        </script>
+        <link rel=""stylesheet"" href=""css/style.css"" type=""text/css"" />
+        <script src=""js/auto-commit.js"" type=""text/javascript""></script>
     </head>
     <body>
         <form id=""{FORM_ID}"" method=""post"" action=""/auto-refresh""></form>
@@ -100,6 +87,30 @@ function lostFocus(input) {{
             }
         }
 
+        private async Task LoadStaticResources()
+        {
+            //.Replace('\\', '/')
+            string currentFolder = Path.GetFullPath(".");
+            string[] folders = { "css", "js" };
+
+            foreach (var filePath in folders.SelectMany(f => Directory.GetFiles(f, "*", SearchOption.AllDirectories)))
+            {
+                string shortPath = filePath.Replace(currentFolder, String.Empty).Replace('\\', '/');
+
+                using (var stream = File.OpenRead(filePath))
+                using (var reader = new StreamReader(stream))
+                {
+                    byte[] bytes = new byte[stream.Length];
+                    int offset = 0;
+                    int writtenBytes = 0;
+                    while ((writtenBytes = await stream.ReadAsync(bytes, offset, Math.Min(1024, (int)stream.Length - offset))) > 0)
+                        offset += writtenBytes;
+
+                    StaticResources.Add($"/{shortPath}", bytes);
+                }
+            }
+        }
+
         public async Task RunServerAsync()
         {
             HttpListener listener = new HttpListener();
@@ -119,15 +130,32 @@ function lostFocus(input) {{
             }
         }
 
+        private async Task<bool> DeliverStaticContent(string extension, string contentType, HttpListenerResponse response, HttpListenerRequest request)
+        {
+            if (request.RawUrl.EndsWith(extension))
+            {
+                byte[] bytes = GetStaticContent(request.RawUrl);
+                if (bytes is null)
+                    response.StatusCode = (int)HttpStatusCode.NotFound;
+                else
+                {
+                    await response.OutputStream.WriteAsync(bytes, 0, bytes.Length);
+                    response.ContentType = contentType;
+                }
+                return true;
+            }
+            return false;
+        }
+
         private async Task ProcessContext(HttpListenerContext context)
         {
             switch (context.Request.HttpMethod)
             {
                 case "GET":
-                    if (context.Request.RawUrl.EndsWith(".css"))
+                    if (new []{ (".css", "text/css"), (".js", "text/javascript") }
+                        .Any(t => DeliverStaticContent(t.Item1, t.Item2, context.Response, context.Request).Result))
                     {
-                        await ResolveCss(context.Request.RawUrl).CopyToAsync(context.Response.OutputStream);
-                        context.Response.ContentType = "text/css";
+
                     }
                     else if (GetHandlers.TryGetValue(context.Request.RawUrl, out GetFunc getHandler))
                     {
@@ -167,9 +195,12 @@ function lostFocus(input) {{
             }
         }
 
-        private Stream ResolveCss(string file)
+        private byte[] GetStaticContent(string file)
         {
-            return File.OpenRead(Path.GetFullPath(file.Substring(1)));
+            if (StaticResources.TryGetValue(file, out byte[] result))
+                return result;
+            System.Diagnostics.Debug.WriteLine($"static resource {file} not found");
+            return null;
         }
 
         protected Dictionary<string, string> SplitFormData(string data)

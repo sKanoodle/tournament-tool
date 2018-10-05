@@ -4,8 +4,12 @@ using System.Text;
 
 namespace TournamentTool.Tournaments
 {
-    //class DoubleEliminationTournament : ITournament
-    //{
+    class DoubleEliminationTournament : SingleEliminationTournament
+    {
+        public DoubleEliminationTournament(string[] names, int setCount)
+            : base(names, setCount)
+        {
 
-    //}
+        }
+    }
 }

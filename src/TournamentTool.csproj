@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <None Update="css\*" CopyToOutputDirectory="Always" LinkBase="css\" />
+    <None Update="js\*" CopyToOutputDirectory="Always" LinkBase="js\" />
   </ItemGroup>
 
 </Project>
