@@ -98,7 +98,7 @@ namespace TournamentTool
 </div>";
         }
 
-        public string RenderElimination()
+        public virtual string RenderElimination()
         {
             return $@"<div>{RenderEliminationMatchPart(Contestant1, s => s.Points1)}{RenderEliminationMatchPart(Contestant2, s => s.Points2)}</div>";
         }

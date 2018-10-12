@@ -65,6 +65,11 @@ namespace TournamentTool.Tournaments
 
         public virtual string Render()
         {
+            return RenderMatchTree(Matches);
+        }
+
+        protected string RenderMatchTree(Match[][] matches)
+        {
             StringBuilder sb = new StringBuilder("<div>");
 
             foreach (Match[] round in Matches)
